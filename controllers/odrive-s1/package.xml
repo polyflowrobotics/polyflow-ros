@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>odrive-s1</name>
+  <version>0.0.1</version>
+  <description>Polyflow ROS 2 package for controlling the Odrive S1</description>
+
+  <maintainer email="drew@polyflowrobotics.com">Drew Swinney</maintainer>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>composition_interfaces</depend>
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+
+  <!-- External PyPI deps -->
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
