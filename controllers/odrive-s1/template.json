@@ -1,0 +1,58 @@
+{
+  "_id": "controller.odrive_s1",
+  "library_id": "LIB_PLACEHOLDER",
+  "type": "controller",
+  "name": "ODrive S1 Controller",
+  "entry_point": "polyflow_controller/controller.py",
+  "topics": [
+    {
+      "name": "/joint/state",
+      "direction": "publish",
+      "msg_type": "sensor_msgs/JointState",
+      "qos": {
+        "reliability": "best_effort",
+        "history": "keep_last",
+        "depth": 10
+      }
+    },
+    {
+      "name": "/joint_controller/command",
+      "direction": "subscribe",
+      "msg_type": "trajectory_msgs/JointTrajectory",
+      "qos": {
+        "reliability": "reliable",
+        "history": "keep_last",
+        "depth": 10
+      }
+    }
+  ],
+  "services": [],
+  "actions": [],
+  "parameters_schema": {
+    "joint_names": {
+      "type": "string[]",
+      "required": true,
+      "description": "Canonical joint names this controller manages",
+      "ui": { "group": "Joints", "order": 1 }
+    },
+    "control_mode": {
+      "type": "enum",
+      "values": ["velocity", "position"],
+      "default": "velocity",
+      "ui": { "group": "Control", "order": 2 }
+    },
+    "max_velocity": {
+      "type": "number",
+      "default": 4.0,
+      "min": 0,
+      "max": 20,
+      "units": "m/s",
+      "ui": { "group": "Limits", "order": 3 }
+    }
+  },
+  "defaults": {
+    "namespace": "/robot/base",
+    "rate_hz": 150,
+    "lifecycle": true
+  }
+}
