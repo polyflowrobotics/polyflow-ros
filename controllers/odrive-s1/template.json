@@ -31,6 +31,7 @@
   "parameters_schema": {
     "joint_names": {
       "label": "Joint Names",
+      "requiresInstance": true,
       "type": "string[]",
       "required": true,
       "description": "Canonical joint names this controller manages",
