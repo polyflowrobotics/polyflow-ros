@@ -29,12 +29,12 @@
   "services": [],
   "actions": [],
   "parameters_schema": {
-    "joint_names": {
-      "label": "Joint Names",
+    "joint_ids": {
+      "label": "Joints",
       "requiresInstance": true,
       "type": "string[]",
       "required": true,
-      "description": "Canonical joint names this controller manages",
+      "description": "Joint IDs this controller manages",
       "ui": { "group": "Joints", "order": 1 }
     },
     "control_mode": {
