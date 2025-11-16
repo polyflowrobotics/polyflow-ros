@@ -30,18 +30,21 @@
   "actions": [],
   "parameters_schema": {
     "joint_names": {
+      "label": "Joint Names",
       "type": "string[]",
       "required": true,
       "description": "Canonical joint names this controller manages",
       "ui": { "group": "Joints", "order": 1 }
     },
     "control_mode": {
+      "label": "Control Mode",
       "type": "enum",
       "values": ["velocity", "position"],
       "default": "velocity",
       "ui": { "group": "Control", "order": 2 }
     },
     "max_velocity": {
+      "label": "Max Velocity",
       "type": "number",
       "default": 4.0,
       "min": 0,
