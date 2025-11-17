@@ -38,7 +38,8 @@
         "filters": {
           "output_type": "joint"
         },
-        "value_field": "_id"
+        "value_field": "_id",
+        "label_field": "name"
       },
       "ui": { "group": "Joints", "order": 1 }
     },
