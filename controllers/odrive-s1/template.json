@@ -1,7 +1,7 @@
 {
   "type": "controller",
   "name": "ODrive S1 Controller",
-  "entry_point": "odrive-s1.launch.py",
+  "entry_point": "odrive-s1/node.py",
   "topics": [
     {
       "name": "/joint/state",
