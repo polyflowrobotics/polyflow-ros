@@ -1,9 +1,7 @@
 {
-  "_id": "controller.odrive_s1",
-  "library_id": "LIB_PLACEHOLDER",
   "type": "controller",
   "name": "ODrive S1 Controller",
-  "entry_point": "polyflow_controller/controller.py",
+  "entry_point": "odrive-s1.launch.py",
   "topics": [
     {
       "name": "/joint/state",
