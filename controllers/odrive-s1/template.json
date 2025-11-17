@@ -33,6 +33,13 @@
       "type": "string[]",
       "required": true,
       "description": "Joint IDs this controller manages",
+      "entity_source": {
+        "selector": "components.outputs",
+        "filters": {
+          "output_type": "joint"
+        },
+        "value_field": "_id"
+      },
       "ui": { "group": "Joints", "order": 1 }
     },
     "control_mode": {
