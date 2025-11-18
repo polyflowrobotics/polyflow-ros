@@ -36,7 +36,8 @@
       "entity_source": {
         "selector": "components.outputs",
         "filters": {
-          "output_type": "joint"
+          "output_type": "joint",
+          "joint_type": "revolute,continuous"
         },
         "value_field": "_id",
         "label_field": "name"
