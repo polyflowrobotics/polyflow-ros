@@ -7,6 +7,10 @@ packages = [{ include = "odrive-s1" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+rclpy = "*"
+sensor-msgs = "*"
+trajectory-msgs = "*"
+odrive = "*"
 eventlet = "*"
 
 [tool.poetry.scripts]

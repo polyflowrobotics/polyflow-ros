@@ -59,7 +59,7 @@
       "source": "entity_property",
       "binding": {
         "from_param": "joint",
-        "field_path": "limits.lower_position"
+        "field_path": "limit.lower_position"
       },
       "editable": false,
       "ui": { "group": "Limits", "order": 1 }
@@ -71,7 +71,7 @@
       "source": "entity_property",
       "binding": {
         "from_param": "joint",
-        "field_path": "limits.upper_position"
+        "field_path": "limit.upper_position"
       },
       "editable": false,
       "ui": { "group": "Limits", "order": 2 }
@@ -83,7 +83,7 @@
       "source": "entity_property",
       "binding": {
         "from_param": "joint",
-        "field_path": "limits.position_step"
+        "field_path": "limit.position_step"
       },
       "editable": false,
       "ui": { "group": "Limits", "order": 3 }
@@ -95,7 +95,7 @@
       "source": "entity_property",
       "binding": {
         "from_param": "joint",
-        "field_path": "limits.max_effort"
+        "field_path": "limit.max_effort"
       },
       "editable": false,
       "ui": { "group": "Limits", "order": 4 }
@@ -107,7 +107,7 @@
       "source": "entity_property",
       "binding": {
         "from_param": "joint",
-        "field_path": "limits.effort_step"
+        "field_path": "limit.effort_step"
       },
       "editable": false,
       "ui": { "group": "Limits", "order": 5 }
@@ -119,7 +119,7 @@
       "source": "entity_property",
       "binding": {
         "from_param": "joint",
-        "field_path": "limits.max_velocity"
+        "field_path": "limit.max_velocity"
       },
       "editable": false,
       "ui": { "group": "Limits", "order": 6 }
@@ -131,7 +131,7 @@
       "source": "entity_property",
       "binding": {
         "from_param": "joint",
-        "field_path": "limits.velocity_step"
+        "field_path": "limit.velocity_step"
       },
       "editable": false,
       "ui": { "group": "Limits", "order": 7 }
