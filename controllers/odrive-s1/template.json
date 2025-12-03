@@ -27,7 +27,7 @@
   "services": [],
   "actions": [],
   "parameters_schema": {
-    "joint_ids": {
+    "joint": {
       "label": "Joint",
       "requiresInstance": true,
       "type": "string",
@@ -44,6 +44,7 @@
       },
       "ui": { "group": "Joint", "order": 1 }
     },
+
     "control_mode": {
       "label": "Control Mode",
       "type": "enum",
@@ -51,61 +52,88 @@
       "default": "position",
       "ui": { "group": "Control", "order": 2 }
     },
+
     "limit.lower_position": {
       "label": "Min. Rotation",
       "type": "number",
-      "min": 0,
-      "max": 360,
-      "units": "deg",
+      "source": "entity_property",
+      "binding": {
+        "from_param": "joint",
+        "field_path": "limits.lower_position"
+      },
+      "editable": false,
       "ui": { "group": "Limits", "order": 1 }
     },
+
     "limit.upper_position": {
       "label": "Max. Rotation",
       "type": "number",
-      "min": 0,
-      "max": 360,
-      "units": "deg",
+      "source": "entity_property",
+      "binding": {
+        "from_param": "joint",
+        "field_path": "limits.upper_position"
+      },
+      "editable": false,
       "ui": { "group": "Limits", "order": 2 }
     },
+
     "limit.position_step": {
       "label": "Rotation Step",
       "type": "number",
-      "default": 1.0,
-      "min": 0,
-      "max": 360,
-      "units": "deg",
+      "source": "entity_property",
+      "binding": {
+        "from_param": "joint",
+        "field_path": "limits.position_step"
+      },
+      "editable": false,
       "ui": { "group": "Limits", "order": 3 }
     },
+
     "limit.max_effort": {
       "label": "Max Effort",
       "type": "number",
-      "default": 4.0,
-      "min": 0,
-      "units": "deg",
+      "source": "entity_property",
+      "binding": {
+        "from_param": "joint",
+        "field_path": "limits.max_effort"
+      },
+      "editable": false,
       "ui": { "group": "Limits", "order": 4 }
     },
+
     "limit.effort_step": {
       "label": "Effort Step",
       "type": "number",
-      "default": 4.0,
-      "min": 0,
-      "units": "deg",
+      "source": "entity_property",
+      "binding": {
+        "from_param": "joint",
+        "field_path": "limits.effort_step"
+      },
+      "editable": false,
       "ui": { "group": "Limits", "order": 5 }
     },
+
     "limit.max_velocity": {
       "label": "Max Velocity",
       "type": "number",
-      "default": 180.0,
-      "min": 0,
-      "units": "deg/s",
+      "source": "entity_property",
+      "binding": {
+        "from_param": "joint",
+        "field_path": "limits.max_velocity"
+      },
+      "editable": false,
       "ui": { "group": "Limits", "order": 6 }
     },
+
     "limit.velocity_step": {
       "label": "Velocity Step",
       "type": "number",
-      "default": 1.0,
-      "min": 0,
-      "units": "deg/s",
+      "source": "entity_property",
+      "binding": {
+        "from_param": "joint",
+        "field_path": "limits.velocity_step"
+      },
+      "editable": false,
       "ui": { "group": "Limits", "order": 7 }
     }
   },

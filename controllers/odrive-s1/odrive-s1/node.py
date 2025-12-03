@@ -33,8 +33,7 @@ class ODriveS1Controller(Node):
         self.inbound_connections = inbound
         self.outbound_connections = outbound
 
-        joint_ids = parameters.get("joint_ids", [])
-        self.joint_id = parameters.get("joint_id") or (joint_ids[0] if isinstance(joint_ids, list) and joint_ids else None)
+        self.joint_id = parameters.get("joint") or (joint if isinstance(joint_ids, list) and joint_ids else None)
         self.control_mode = parameters.get("control_mode", "position")
         self.lower_position = self._first_param(["limit.lower_position", "lower_position"])
         self.upper_position = self._first_param(["limit.upper_position", "upper_position"])
