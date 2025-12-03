@@ -28,11 +28,11 @@
   "actions": [],
   "parameters_schema": {
     "joint_ids": {
-      "label": "Joints",
+      "label": "Joint",
       "requiresInstance": true,
-      "type": "string[]",
+      "type": "string",
       "required": true,
-      "description": "Joint IDs this controller manages",
+      "description": "Joint ID this controller manages",
       "entity_source": {
         "selector": "components.outputs",
         "filters": {
@@ -42,23 +42,71 @@
         "value_field": "_id",
         "label_field": "name"
       },
-      "ui": { "group": "Joints", "order": 1 }
+      "ui": { "group": "Joint", "order": 1 }
     },
     "control_mode": {
       "label": "Control Mode",
       "type": "enum",
-      "values": ["velocity", "position"],
-      "default": "velocity",
+      "values": ["velocity", "position", "torque"],
+      "default": "position",
       "ui": { "group": "Control", "order": 2 }
     },
-    "max_velocity": {
-      "label": "Max Velocity",
+    "limit.lower_position": {
+      "label": "Min. Rotation",
+      "type": "number",
+      "min": 0,
+      "max": 360,
+      "units": "deg",
+      "ui": { "group": "Limits", "order": 1 }
+    },
+    "limit.upper_position": {
+      "label": "Max. Rotation",
+      "type": "number",
+      "min": 0,
+      "max": 360,
+      "units": "deg",
+      "ui": { "group": "Limits", "order": 2 }
+    },
+    "limit.position_step": {
+      "label": "Rotation Step",
+      "type": "number",
+      "default": 1.0,
+      "min": 0,
+      "max": 360,
+      "units": "deg",
+      "ui": { "group": "Limits", "order": 3 }
+    },
+    "limit.max_effort": {
+      "label": "Max Effort",
       "type": "number",
       "default": 4.0,
       "min": 0,
-      "max": 20,
-      "units": "m/s",
-      "ui": { "group": "Limits", "order": 3 }
+      "units": "deg",
+      "ui": { "group": "Limits", "order": 4 }
+    },
+    "limit.effort_step": {
+      "label": "Effort Step",
+      "type": "number",
+      "default": 4.0,
+      "min": 0,
+      "units": "deg",
+      "ui": { "group": "Limits", "order": 5 }
+    },
+    "limit.max_velocity": {
+      "label": "Max Velocity",
+      "type": "number",
+      "default": 180.0,
+      "min": 0,
+      "units": "deg/s",
+      "ui": { "group": "Limits", "order": 6 }
+    },
+    "limit.velocity_step": {
+      "label": "Velocity Step",
+      "type": "number",
+      "default": 1.0,
+      "min": 0,
+      "units": "deg/s",
+      "ui": { "group": "Limits", "order": 7 }
     }
   },
   "defaults": {
