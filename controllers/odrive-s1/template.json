@@ -30,7 +30,7 @@
     "joint": {
       "label": "Joint",
       "requiresInstance": true,
-      "type": "string",
+      "type": "entity",
       "required": true,
       "description": "Joint ID this controller manages",
       "entity_source": {
