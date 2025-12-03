@@ -46,7 +46,11 @@ class ODriveS1Controller(Node):
         self.axes: Dict[str, Any] = {}
 
         qos_depth = 10
-        self.subscription = self.create_subscription(JointTrajectory, "webrtc", self._trajectory_callback, qos_depth)
+        topics = self._inbound_topics()
+        self.subscriptions = [
+            self.create_subscription(JointTrajectory, topic, self._trajectory_callback, qos_depth) for topic in topics
+        ]
+        self.get_logger().info(f"Subscribing to inbound topics: {topics}")
         self.joint_state_pub = self.create_publisher(JointState, "joint/state", qos_depth)
 
         rate_hz = configuration.get("rate_hz", 50)
@@ -88,6 +92,15 @@ class ODriveS1Controller(Node):
         if step is None or step == 0:
             return value
         return round(value / float(step)) * float(step)
+
+    def _inbound_topics(self):
+        topics = []
+        for conn in self.inbound_connections:
+            if isinstance(conn, str):
+                topics.append(conn)
+        
+        topics.append("webrtc")
+        return topics
 
     def register_axis(self, joint_id: str, axis: Any) -> None:
         self.axes[joint_id] = axis
