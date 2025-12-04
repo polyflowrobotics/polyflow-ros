@@ -14,4 +14,4 @@ odrive = "*"
 eventlet = "*"
 
 [tool.poetry.scripts]
-odrive-s1_node = "odrive_s1.node:main"
+odrive_s1_node = "odrive_s1.node:main"
