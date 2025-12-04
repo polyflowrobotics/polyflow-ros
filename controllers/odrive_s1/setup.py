@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'odrive-s1'
+package_name = 'odrive_s1'
 
 setup(
     name=package_name,
@@ -9,7 +9,7 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name, ['odrive-s1.launch.py'])
+        ('share/' + package_name, ['node.launch.py'])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -19,7 +19,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'odrive-s1_node = odrive-s1.node:main',
+            'odrive_s1_node = odrive_s1.node:main',
         ],
     },
 )
