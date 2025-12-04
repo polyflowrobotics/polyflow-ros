@@ -6,12 +6,7 @@ authors = ["Drew Swinney <drew@polyflowrobotics.com>"]
 packages = [{ include = "odrive_s1" }]
 
 [tool.poetry.dependencies]
-python = "^3.12"
-rclpy = "*"
-sensor-msgs = "*"
-trajectory-msgs = "*"
 odrive = "*"
-eventlet = "*"
 
 [tool.poetry.scripts]
 odrive_s1_node = "odrive_s1.node:main"

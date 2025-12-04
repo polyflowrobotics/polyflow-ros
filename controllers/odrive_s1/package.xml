@@ -10,6 +10,8 @@
 
   <depend>composition_interfaces</depend>
   <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>trajectory_msgs</depend>
   <depend>std_msgs</depend>
 
   <!-- External PyPI deps -->
