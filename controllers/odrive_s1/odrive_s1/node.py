@@ -248,7 +248,7 @@ async def run_odrive(node: ODriveS1Controller):
 
 
 def main(args=None):
-     try:
+    try:
         print("NODE AMENT_PREFIX_PATH:", os.environ.get("AMENT_PREFIX_PATH", "<none>"), flush=True)
         rclpy.init(args=args)
         node = ODriveS1Controller()
