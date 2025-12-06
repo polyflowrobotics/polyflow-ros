@@ -248,32 +248,38 @@ async def run_odrive(node: ODriveS1Controller):
 
 
 def main(args=None):
-    rclpy.init(args=args)
-    node = ODriveS1Controller()
+     try:
+        print("NODE AMENT_PREFIX_PATH:", os.environ.get("AMENT_PREFIX_PATH", "<none>"), flush=True)
+        rclpy.init(args=args)
+        node = ODriveS1Controller()
 
-    # Spin ROS in the background so subscriptions/timers actually run
-    executor = SingleThreadedExecutor()
-    executor.add_node(node)
-    ros_thread = threading.Thread(target=executor.spin, daemon=True)
-    ros_thread.start()
-    node.get_logger().info("ROS executor started (background thread)")
+        # Spin ROS in the background so subscriptions/timers actually run
+        executor = SingleThreadedExecutor()
+        executor.add_node(node)
+        ros_thread = threading.Thread(target=executor.spin, daemon=True)
+        ros_thread.start()
+        node.get_logger().info("ROS executor started (background thread)")
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        node.get_logger().info("Attempting to run ODrive S1 Controller…")
-        loop.run_until_complete(run_odrive(node))
-    except KeyboardInterrupt:
-        node.get_logger().info("Keyboard interrupt received")
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            node.get_logger().info("Attempting to run ODrive S1 Controller…")
+            loop.run_until_complete(run_odrive(node))
+        except KeyboardInterrupt:
+            node.get_logger().info("Keyboard interrupt received")
+        except Exception as e:
+            node.get_logger().error(f"ODrive loop crashed: {e}")
+        finally:
+            node.get_logger().info("Shutting down")
+            executor.shutdown()
+            loop.stop()
+            loop.close()
+            node.destroy_node()
+            rclpy.shutdown()
     except Exception as e:
-        node.get_logger().error(f"ODrive loop crashed: {e}")
-    finally:
-        node.get_logger().info("Shutting down")
-        executor.shutdown()
-        loop.stop()
-        loop.close()
-        node.destroy_node()
-        rclpy.shutdown()
+        print("=== ODRIVE_S1 NODE CRASH ===", file=sys.stderr, flush=True)
+        traceback.print_exc()
+        raise
 
 
 if __name__ == "__main__":
