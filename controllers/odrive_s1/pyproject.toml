@@ -7,6 +7,7 @@ packages = [{ include = "odrive_s1" }]
 
 [tool.poetry.dependencies]
 odrive = "*"
+numpy = "*"
 
 [tool.poetry.scripts]
 odrive_s1_node = "odrive_s1.node:main"
