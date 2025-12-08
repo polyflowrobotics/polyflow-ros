@@ -7,6 +7,9 @@ includes = [
 authors = [
     {name = "Drew Swinney", email = "drew@polyflowrobotics.com"},
 ]
+maintainers = [
+    {name = "Drew Swinney", email = "drew@polyflowrobotics.com"},
+]
 requires-python = ""
 dependencies = [
     "odrive",
@@ -15,6 +18,7 @@ dependencies = [
 name = "odrive_s1"
 version = "0.1.0"
 description = "Polyflow ODrive S1 controller node"
+license = {text = "MIT"}
 
 [project.scripts]
 odrive_s1_node = "odrive_s1.node:main"
