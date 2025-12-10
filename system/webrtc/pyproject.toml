@@ -1,0 +1,33 @@
+[tool.pdm.build]
+includes = [
+    "webrtc",
+]
+
+[project]
+authors = [
+    {name = "Drew Swinney", email = "drew@polyflowrobotics.com"},
+]
+maintainers = [
+    {name = "Drew Swinney", email = "drew@polyflowrobotics.com"},
+]
+requires-python = "<4.0,>=3.12"
+dependencies = [
+    "aiortc<2.0.0,>=1.9.0",
+    "aioice",
+    "pyee",
+    "crc32c",
+    "aiohttp",
+    "python-socketio",
+    "eventlet",
+]
+name = "webrtc"
+version = "0.1.0"
+description = "Polyflow WebRTC bridge node"
+license = {text = "Proprietary"}
+
+[project.scripts]
+webrtc_node = "webrtc.node:main"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
