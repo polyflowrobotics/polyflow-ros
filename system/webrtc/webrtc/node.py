@@ -620,14 +620,14 @@ class WebRTCBridge(Node):
 
     def _declare_parameters(self) -> None:
         """Declare all ROS parameters with defaults."""
-        self.declare_parameter("robot_id", "robot-001")
-        self.declare_parameter("signaling_url", "ws://polyflow.studio/signal")
-        self.declare_parameter("auth_token", "")
+        self.declare_parameter("robot_id", os.getenv('ROBOT_ID'))
+        self.declare_parameter("signaling_url",  os.getenv('SIGNALING_URL'))
+        self.declare_parameter("auth_token", os.getenv('AUTH_TOKEN'))
         self.declare_parameter("socketio_namespace", "")
         self.declare_parameter("socketio_path", "")
         self.declare_parameter("ice_servers", "stun:stun.l.google.com:19302")
-        self.declare_parameter("ice_username", "")
-        self.declare_parameter("ice_password", "")
+        self.declare_parameter("ice_username", os.getenv('TURN_SERVER_USERNAME'))
+        self.declare_parameter("ice_password", os.getenv('TURN_SERVER_PASSWORD'))
 
     def _load_parameters(self) -> None:
         """Load parameter values."""
