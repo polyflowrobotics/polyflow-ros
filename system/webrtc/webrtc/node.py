@@ -626,7 +626,7 @@ class WebRTCBridge(Node):
         self.declare_parameter("auth_token", os.getenv('AUTH_TOKEN', ''))
         self.declare_parameter("socketio_namespace", "")
         self.declare_parameter("socketio_path", "")
-        self.declare_parameter("ice_servers", "stun:stun.l.google.com:19302")
+        self.declare_parameter("ice_servers", ["stun:stun.l.google.com:19302", f'turn:{os.getenv('TURN_SERVER_URL')}?transport=udp',f'turn:{os.getenv('TURN_SERVER_URL')}:3478?transport=tcp'], ["stun:stun.l.google.com:19302", f'turn:http://polyflow.studio:3478?transport=udp', f'turn:http://polyflow.studio:3478?transport=tcp'])
         self.declare_parameter("ice_username", os.getenv('TURN_SERVER_USERNAME', ''))
         self.declare_parameter("ice_password", os.getenv('TURN_SERVER_PASSWORD', ''))
 
