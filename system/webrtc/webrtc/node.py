@@ -621,12 +621,19 @@ class WebRTCBridge(Node):
 
     def _declare_parameters(self) -> None:
         """Declare all ROS parameters with defaults."""
+        default_turn_url = os.getenv("TURN_SERVER_URL", "http://polyflow.studio:3478")
+        default_ice_servers = [
+            "stun:stun.l.google.com:19302",
+            f"turn:{default_turn_url}?transport=udp",
+            f"turn:{default_turn_url}?transport=tcp",
+        ]
+
         self.declare_parameter("robot_id", os.getenv('ROBOT_ID', ''))
         self.declare_parameter("signaling_url",  os.getenv('SIGNALING_URL', ''))
         self.declare_parameter("auth_token", os.getenv('AUTH_TOKEN', ''))
         self.declare_parameter("socketio_namespace", "")
         self.declare_parameter("socketio_path", "")
-        self.declare_parameter("ice_servers", ["stun:stun.l.google.com:19302", f'turn:{os.getenv('TURN_SERVER_URL')}?transport=udp',f'turn:{os.getenv('TURN_SERVER_URL')}:3478?transport=tcp'], ["stun:stun.l.google.com:19302", f'turn:http://polyflow.studio:3478?transport=udp', f'turn:http://polyflow.studio:3478?transport=tcp'])
+        self.declare_parameter("ice_servers", default_ice_servers)
         self.declare_parameter("ice_username", os.getenv('TURN_SERVER_USERNAME', ''))
         self.declare_parameter("ice_password", os.getenv('TURN_SERVER_PASSWORD', ''))
 
