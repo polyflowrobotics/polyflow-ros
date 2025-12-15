@@ -48,7 +48,7 @@ class ODriveS1Controller(Node):
 
         qos_depth = 10
         topics = self._inbound_topics()
-        self.subscriptions = [
+        self._trajectory_subscriptions = [
             self.create_subscription(JointTrajectory, topic, self._trajectory_callback, qos_depth) for topic in topics
         ]
         self.get_logger().info(f"Subscribing to inbound topics: {topics}")
