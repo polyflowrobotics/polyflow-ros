@@ -741,21 +741,30 @@ class WebRTCBridge(Node):
 
     def _send_rebuild_status(self, status: str, message: str) -> None:
         """Send rebuild status message to WebRTC client."""
-        if self.state_channel and self.state_channel.readyState == "open":
-            envelope = {
-                "topic": "system/nixos/rebuild/status",
-                "qos": "state",
-                "tUnixNanos": int(time.time() * 1e9),
-                "payload": {
-                    "status": status,
-                    "message": message
-                },
-            }
-            try:
-                self.state_channel.send(json.dumps(envelope))
-                self.get_logger().debug(f"Sent rebuild status: {status} - {message}")
-            except Exception as exc:
-                self.get_logger().warn(f"Failed to send rebuild status: {exc}")
+        if self.state_channel is None:
+            self.get_logger().warn(f"Cannot send rebuild status '{status}': state_channel is None")
+            return
+
+        if self.state_channel.readyState != "open":
+            self.get_logger().warn(
+                f"Cannot send rebuild status '{status}': state_channel readyState is '{self.state_channel.readyState}' (expected 'open')"
+            )
+            return
+
+        envelope = {
+            "topic": "system/nixos/rebuild/status",
+            "qos": "state",
+            "tUnixNanos": int(time.time() * 1e9),
+            "payload": {
+                "status": status,
+                "message": message
+            },
+        }
+        try:
+            self.state_channel.send(json.dumps(envelope))
+            self.get_logger().info(f"Sent rebuild status: {status} - {message}")
+        except Exception as exc:
+            self.get_logger().error(f"Failed to send rebuild status: {exc}")
 
 
 # ============================================================================
