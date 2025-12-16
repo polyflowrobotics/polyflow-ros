@@ -824,13 +824,26 @@ async def run_webrtc(node: WebRTCBridge) -> None:
     def update_state_channel():
         node.state_channel = peer_manager.state_channel
 
+    def register_datachannel_handler(pc):
+        """Register handler to update node's state_channel reference."""
+        @pc.on("datachannel")
+        def on_datachannel_wrapper(channel):
+            if channel.label == "state":
+                node.state_channel = channel
+                node.get_logger().info(f"State channel updated: readyState={channel.readyState}")
+
     # Patch peer manager to update node's state channel reference
     original_create = peer_manager.create
     def patched_create():
         pc = original_create()
         update_state_channel()
+        register_datachannel_handler(pc)
         return pc
     peer_manager.create = patched_create
+
+    # Register handler for initial peer connection
+    if peer_manager.pc:
+        register_datachannel_handler(peer_manager.pc)
 
     # Create signaling client
     signaling_client = SignalingClient(
@@ -840,15 +853,6 @@ async def run_webrtc(node: WebRTCBridge) -> None:
         logger=node.get_logger(),
         peer_manager=peer_manager
     )
-
-    # Connect state channel updates
-    original_datachannel_handler = None
-    if peer_manager.pc:
-        # Update state channel reference when channels are created
-        @peer_manager.pc.on("datachannel")
-        def on_datachannel_wrapper(channel):
-            if channel.label == "state":
-                node.state_channel = channel
 
     try:
         await signaling_client.connect_and_run()
