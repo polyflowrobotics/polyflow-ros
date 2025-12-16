@@ -689,7 +689,7 @@ class WebRTCBridge(Node):
             threading.Thread(target=self.trigger_nixos_rebuild, daemon=True).start()
 
     def trigger_nixos_rebuild(self) -> None:
-        """Trigger NixOS rebuild via systemd service."""
+        """Trigger NixOS rebuild via systemd service and monitor completion."""
         service_name = self.rebuild_service_name
         cmd = ["systemctl", "start", "--no-block", service_name]
 
@@ -697,8 +697,65 @@ class WebRTCBridge(Node):
             try:
                 subprocess.run(cmd, check=True)
                 self.get_logger().info(f"Triggered polyflow-rebuild service {service_name}")
+                self._send_rebuild_status("started", "NixOS rebuild started")
+
+                # Monitor the service in a separate thread
+                threading.Thread(target=self._monitor_rebuild, args=(service_name,), daemon=True).start()
             except subprocess.CalledProcessError as exc:
                 self.get_logger().error(f"Failed to start {service_name}: {exc}")
+                self._send_rebuild_status("error", f"Failed to start rebuild: {exc}")
+
+    def _monitor_rebuild(self, service_name: str) -> None:
+        """Monitor rebuild service and report status."""
+        while True:
+            try:
+                result = subprocess.run(
+                    ["systemctl", "is-active", service_name],
+                    capture_output=True,
+                    text=True
+                )
+                status = result.stdout.strip()
+
+                if status == "inactive":
+                    # Check if it succeeded or failed
+                    exit_result = subprocess.run(
+                        ["systemctl", "show", service_name, "--property=ExecMainStatus"],
+                        capture_output=True,
+                        text=True
+                    )
+                    exit_code = exit_result.stdout.strip().split("=")[1]
+
+                    if exit_code == "0":
+                        self.get_logger().info("NixOS rebuild completed successfully")
+                        self._send_rebuild_status("completed", "NixOS rebuild completed successfully")
+                    else:
+                        self.get_logger().error(f"NixOS rebuild failed with exit code {exit_code}")
+                        self._send_rebuild_status("failed", f"Rebuild failed with exit code {exit_code}")
+                    break
+
+                time.sleep(1)  # Poll every second
+            except Exception as exc:
+                self.get_logger().error(f"Error monitoring rebuild: {exc}")
+                self._send_rebuild_status("error", f"Error monitoring rebuild: {exc}")
+                break
+
+    def _send_rebuild_status(self, status: str, message: str) -> None:
+        """Send rebuild status message to WebRTC client."""
+        if self.state_channel and self.state_channel.readyState == "open":
+            envelope = {
+                "topic": "system/nixos/rebuild/status",
+                "qos": "state",
+                "tUnixNanos": int(time.time() * 1e9),
+                "payload": {
+                    "status": status,
+                    "message": message
+                },
+            }
+            try:
+                self.state_channel.send(json.dumps(envelope))
+                self.get_logger().debug(f"Sent rebuild status: {status} - {message}")
+            except Exception as exc:
+                self.get_logger().warn(f"Failed to send rebuild status: {exc}")
 
 
 # ============================================================================
