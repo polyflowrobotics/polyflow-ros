@@ -619,6 +619,9 @@ class WebRTCBridge(Node):
         self.rebuild_service_name = "polyflow-rebuild.service"
         self._rebuild_lock = threading.Lock()
 
+        # Event loop for thread-safe operations
+        self.event_loop: Optional[asyncio.AbstractEventLoop] = None
+
     def _declare_parameters(self) -> None:
         """Declare all ROS parameters with defaults."""
         default_turn_url = os.getenv("TURN_SERVER_URL", "http://polyflow.studio:3478")
@@ -760,11 +763,22 @@ class WebRTCBridge(Node):
                 "message": message
             },
         }
-        try:
-            self.state_channel.send(json.dumps(envelope))
-            self.get_logger().info(f"Sent rebuild status: {status} - {message}")
-        except Exception as exc:
-            self.get_logger().error(f"Failed to send rebuild status: {exc}")
+
+        def _do_send():
+            """Inner function to perform the actual send operation."""
+            try:
+                self.state_channel.send(json.dumps(envelope))
+                self.get_logger().info(f"Sent rebuild status: {status} - {message}")
+            except Exception as exc:
+                self.get_logger().error(f"Failed to send rebuild status: {exc}")
+
+        # If we have an event loop and we're not on the event loop thread,
+        # schedule the send operation on the event loop thread
+        if self.event_loop is not None:
+            self.event_loop.call_soon_threadsafe(_do_send)
+        else:
+            # Fallback if event loop is not set yet
+            _do_send()
 
 
 # ============================================================================
@@ -886,6 +900,7 @@ def main(args=None):
     # Run async WebRTC client
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+    node.event_loop = loop  # Store event loop reference for thread-safe operations
     try:
         node.get_logger().info("Attempting to run the WebRTC client…")
         loop.run_until_complete(run_webrtc(node))
