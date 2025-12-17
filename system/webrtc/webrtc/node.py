@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+import aiohttp
 import rclpy
 import socketio
 from aiortc import RTCConfiguration, RTCIceServer, RTCPeerConnection, RTCSessionDescription
@@ -452,15 +453,18 @@ class SignalingClient:
         robot_id: str,
         auth_token: str,
         logger,
-        peer_manager: PeerConnectionManager
+        peer_manager: PeerConnectionManager,
+        connect_wait_timeout_s: float = 10.0,
     ):
         self.config = config
         self.robot_id = robot_id
         self.auth_token = auth_token
         self.logger = logger
         self.peer_manager = peer_manager
+        self.connect_wait_timeout_s = float(connect_wait_timeout_s)
 
-        self.sio = socketio.AsyncClient(reconnection=True)
+        self._http_session = aiohttp.ClientSession()
+        self.sio = socketio.AsyncClient(reconnection=True, http_session=self._http_session)
         self.pending_messages: list[dict] = []
 
         self._setup_handlers()
@@ -580,15 +584,28 @@ class SignalingClient:
                 namespaces=[self.config.namespace],
                 socketio_path=self.config.socketio_path,
                 auth={"token": self.auth_token} if self.auth_token else None,
+                wait_timeout=self.connect_wait_timeout_s,
             )
             await self.sio.wait()
         finally:
-            await self.disconnect()
+            await self.aclose()
 
     async def disconnect(self) -> None:
         """Disconnect from signaling server."""
-        if self.sio.connected:
+        try:
             await self.sio.disconnect()
+        except Exception:
+            pass
+
+    async def aclose(self) -> None:
+        """Best-effort cleanup of Socket.IO + aiohttp resources."""
+        try:
+            await self.disconnect()
+        finally:
+            try:
+                await self._http_session.close()
+            except Exception:
+                pass
 
 
 # ============================================================================
@@ -639,6 +656,9 @@ class WebRTCBridge(Node):
         self.declare_parameter("ice_servers", default_ice_servers)
         self.declare_parameter("ice_username", os.getenv('TURN_SERVER_USERNAME', ''))
         self.declare_parameter("ice_password", os.getenv('TURN_SERVER_PASSWORD', ''))
+        self.declare_parameter("signaling_retry_initial_s", 1.0)
+        self.declare_parameter("signaling_retry_max_s", 30.0)
+        self.declare_parameter("signaling_connect_wait_timeout_s", 10.0)
 
     def _load_parameters(self) -> None:
         """Load parameter values."""
@@ -650,6 +670,13 @@ class WebRTCBridge(Node):
         self.ice_servers = self.get_parameter("ice_servers").value
         self.ice_username = self.get_parameter("ice_username").get_parameter_value().string_value
         self.ice_password = self.get_parameter("ice_password").get_parameter_value().string_value
+        self.signaling_retry_initial_s = (
+            self.get_parameter("signaling_retry_initial_s").get_parameter_value().double_value
+        )
+        self.signaling_retry_max_s = self.get_parameter("signaling_retry_max_s").get_parameter_value().double_value
+        self.signaling_connect_wait_timeout_s = (
+            self.get_parameter("signaling_connect_wait_timeout_s").get_parameter_value().double_value
+        )
 
     def _setup_ros_interface(self) -> None:
         """Setup ROS publishers and subscribers."""
@@ -859,25 +886,38 @@ async def run_webrtc(node: WebRTCBridge) -> None:
     if peer_manager.pc:
         register_datachannel_handler(peer_manager.pc)
 
-    # Create signaling client
-    signaling_client = SignalingClient(
-        config=socketio_config,
-        robot_id=node.robot_id,
-        auth_token=node.auth_token,
-        logger=node.get_logger(),
-        peer_manager=peer_manager
-    )
+    retry_delay_s = float(getattr(node, "signaling_retry_initial_s", 1.0) or 1.0)
+    retry_delay_max_s = float(getattr(node, "signaling_retry_max_s", 30.0) or 30.0)
+    connect_wait_timeout_s = float(getattr(node, "signaling_connect_wait_timeout_s", 10.0) or 10.0)
 
     try:
-        await signaling_client.connect_and_run()
+        while rclpy.ok():
+            # Create a fresh signaling client each attempt to avoid leaking aiohttp sessions
+            signaling_client = SignalingClient(
+                config=socketio_config,
+                robot_id=node.robot_id,
+                auth_token=node.auth_token,
+                logger=node.get_logger(),
+                peer_manager=peer_manager,
+                connect_wait_timeout_s=connect_wait_timeout_s,
+            )
+
+            try:
+                await signaling_client.connect_and_run()
+                retry_delay_s = float(getattr(node, "signaling_retry_initial_s", 1.0) or 1.0)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                node.get_logger().error(f"Signaling loop error: {exc}")
+                node.get_logger().info(f"Retrying signaling connection in {retry_delay_s:.1f}s")
+                await asyncio.sleep(retry_delay_s)
+                retry_delay_s = min(retry_delay_s * 2.0, retry_delay_max_s)
     finally:
         if peer_manager.pc:
             try:
                 await peer_manager.pc.close()
             except Exception as exc:
-                node.get_logger().warn(
-                    f"Error while closing peer connection during shutdown: {exc}"
-                )
+                node.get_logger().warn(f"Error while closing peer connection during shutdown: {exc}")
 
 
 # ============================================================================
