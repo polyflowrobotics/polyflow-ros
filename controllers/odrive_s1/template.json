@@ -53,6 +53,96 @@
       "ui": { "group": "Control", "order": 2 }
     },
 
+    "transport": {
+      "label": "Transport",
+      "type": "enum",
+      "values": ["usb", "can"],
+      "default": "can",
+      "description": "How this node connects to the ODrive (USB via odrive python package, or CAN via python-can).",
+      "ui": { "group": "Control", "order": 3 }
+    },
+
+    "units": {
+      "label": "Units",
+      "type": "enum",
+      "values": ["radians", "turns"],
+      "default": "radians",
+      "description": "ROS JointTrajectory/JointState units. ODrive uses turns internally; this controls conversion scaling defaults.",
+      "ui": { "group": "Control", "order": 4 }
+    },
+
+    "can.node_id": {
+      "label": "CAN Node ID",
+      "type": "number",
+      "default": 0,
+      "description": "ODrive CAN node_id (axis.config.can.node_id).",
+      "ui": { "group": "CAN", "order": 1 }
+    },
+
+    "can.interface": {
+      "label": "CAN Interface",
+      "type": "string",
+      "default": "socketcan",
+      "description": "python-can interface (e.g. socketcan).",
+      "ui": { "group": "CAN", "order": 2 }
+    },
+
+    "can.channel": {
+      "label": "CAN Channel",
+      "type": "string",
+      "default": "can0",
+      "description": "CAN channel/device (e.g. can0).",
+      "ui": { "group": "CAN", "order": 3 }
+    },
+
+    "can.bitrate": {
+      "label": "CAN Bitrate",
+      "type": "number",
+      "default": 0,
+      "description": "Optional bitrate for python-can (0 = use OS interface config).",
+      "ui": { "group": "CAN", "order": 4 }
+    },
+
+    "can.poll_hz": {
+      "label": "CAN Poll Rate (Hz)",
+      "type": "number",
+      "default": 50,
+      "description": "Rate to request encoder estimates from ODrive.",
+      "ui": { "group": "CAN", "order": 5 }
+    },
+
+    "can.request_iq": {
+      "label": "CAN Request Iq",
+      "type": "boolean",
+      "default": false,
+      "description": "If enabled, requests Iq feedback to estimate effort (requires can.torque_constant).",
+      "ui": { "group": "CAN", "order": 6 }
+    },
+
+    "can.heartbeat_timeout_s": {
+      "label": "CAN Heartbeat Timeout (s)",
+      "type": "number",
+      "default": 2.0,
+      "description": "Warn if heartbeat isn't seen within this period after startup.",
+      "ui": { "group": "CAN", "order": 7 }
+    },
+
+    "can.enable_closed_loop_on_start": {
+      "label": "Enable Closed Loop On Start",
+      "type": "boolean",
+      "default": true,
+      "description": "Sends AXIS_STATE_CLOSED_LOOP_CONTROL on startup (recommended for position/velocity control).",
+      "ui": { "group": "CAN", "order": 8 }
+    },
+
+    "can.torque_constant": {
+      "label": "Torque Constant (Nm/A)",
+      "type": "number",
+      "default": 0,
+      "description": "If set and can.request_iq is enabled, effort is estimated as torque_constant * Iq_measured.",
+      "ui": { "group": "CAN", "order": 9 }
+    },
+
     "limit.lower_position": {
       "label": "Min. Rotation",
       "type": "number",

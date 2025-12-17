@@ -15,6 +15,11 @@ dependencies = [
     "odrive",
     "numpy",
 ]
+
+[project.optional-dependencies]
+can = [
+    "python-can",
+]
 name = "odrive_s1"
 version = "0.1.0"
 description = "Polyflow ODrive S1 controller node"
