@@ -528,7 +528,7 @@ async def run_odrive(node: ODriveS1Controller):
 
         node.register_axis(node.joint_id, axis)
         node.get_logger().info(
-            f"Connected to ODrive CANSimple (node_id={node.can_node_id}, {node.can_interface}:{node.can_channel})"
+            f"Connected to ODrive CANSimple (node_id={node.can_node_id}, {node.can_interface}:{node.can_channel}), bitrate={node.can_bitrate}"
         )
 
         if node.control_mode == "velocity":
