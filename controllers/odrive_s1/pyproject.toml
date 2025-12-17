@@ -14,11 +14,7 @@ requires-python = ""
 dependencies = [
     "odrive",
     "numpy",
-]
-
-[project.optional-dependencies]
-can = [
-    "python-can",
+    "python-can"
 ]
 name = "odrive_s1"
 version = "0.1.0"
