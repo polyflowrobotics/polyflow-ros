@@ -98,7 +98,7 @@
     "can.bitrate": {
       "label": "CAN Bitrate",
       "type": "number",
-      "default": 0,
+      "default": 1000000,
       "description": "Optional bitrate for python-can (0 = use OS interface config).",
       "ui": { "group": "CAN", "order": 4 }
     },
