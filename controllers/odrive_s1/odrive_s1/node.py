@@ -353,6 +353,12 @@ class ODriveS1Controller(Node):
         self.effort_step = self._first_param(["limit.effort_step", "effort_step"])
         self.max_velocity = self._first_param(["limit.max_velocity", "max_velocity"])
         self.velocity_step = self._first_param(["limit.velocity_step", "velocity_step"])
+
+        # Smoothing parameters
+        self.smoothing_alpha = float(parameters.get("smoothing_alpha", 0.0))  # 0 = no smoothing, 0.9 = heavy smoothing
+        self._last_commanded_position: Dict[str, float] = {}
+        self._last_commanded_velocity: Dict[str, float] = {}
+
         self.axes: Dict[str, Any] = {}
 
         # Use system default QoS for maximum compatibility
@@ -485,16 +491,30 @@ class ODriveS1Controller(Node):
                 vel_cmd = float(velocity)
                 vel_cmd = self._clamp(vel_cmd, None, self.max_velocity)
                 vel_cmd = self._quantize(vel_cmd, self.velocity_step)
+
+                # Apply exponential smoothing if enabled
+                if self.smoothing_alpha > 0 and joint_id in self._last_commanded_velocity:
+                    vel_cmd = self.smoothing_alpha * self._last_commanded_velocity[joint_id] + (1 - self.smoothing_alpha) * vel_cmd
+                self._last_commanded_velocity[joint_id] = vel_cmd
+
                 vel_scaled = vel_cmd * float(self.cmd_velocity_scale)
                 axis.controller.input_vel = vel_scaled
                 self.get_logger().debug(f"Set velocity for {joint_id}: {vel_cmd} (scaled={vel_scaled})")
+
             elif self.control_mode == "position" and position is not None:
                 pos_cmd = float(position)
                 pos_cmd = self._clamp(pos_cmd, self.lower_position, self.upper_position)
                 pos_cmd = self._quantize(pos_cmd, self.position_step)
+
+                # Apply exponential smoothing if enabled
+                if self.smoothing_alpha > 0 and joint_id in self._last_commanded_position:
+                    pos_cmd = self.smoothing_alpha * self._last_commanded_position[joint_id] + (1 - self.smoothing_alpha) * pos_cmd
+                self._last_commanded_position[joint_id] = pos_cmd
+
                 pos_scaled = pos_cmd * float(self.cmd_position_scale)
                 axis.controller.input_pos = pos_scaled
                 self.get_logger().debug(f"Set position for {joint_id}: {pos_cmd} (scaled={pos_scaled})")
+
             elif self.control_mode == "torque" and effort is not None:
                 eff_cmd = float(effort)
                 eff_cmd = self._clamp(eff_cmd, None, self.max_effort)

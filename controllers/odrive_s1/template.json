@@ -79,6 +79,14 @@
       "ui": { "group": "Control", "order": 5 }
     },
 
+    "smoothing_alpha": {
+      "label": "Smoothing Factor",
+      "type": "number",
+      "default": 0.0,
+      "description": "Exponential smoothing factor (0.0 = no smoothing, 0.9 = heavy smoothing). Higher values create smoother motion but slower response. Recommended: 0.3-0.7 for smooth movements.",
+      "ui": { "group": "Control", "order": 6 }
+    },
+
     "can.node_id": {
       "label": "CAN Node ID",
       "type": "number",
