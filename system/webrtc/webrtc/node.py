@@ -698,7 +698,6 @@ class WebRTCBridge(Node):
         from rclpy.qos import qos_profile_system_default
         qos_profile = qos_profile_system_default
 
-        self.j1_cmd_pub = self.create_publisher(Float32, "/arm/j1/cmd/position", 10)
         # Publishes incoming WebRTC JointTrajectory commands to downstream controllers (e.g., ODrive)
         self.trajectory_pub = self.create_publisher(JointTrajectory, "/robot/joint/trajectory", qos_profile)
         self.get_logger().info(
@@ -709,16 +708,6 @@ class WebRTCBridge(Node):
             Float32, "/arm/j1/state/position", self._on_j1_state, 10
         )
         self.state_channel: Optional[RTCDataChannel] = None
-
-        # Create a timer to periodically check for subscribers
-        def check_subscribers():
-            try:
-                sub_count = self.count_subscribers(self.trajectory_pub.topic_name)
-                self.get_logger().info(f"Topic '{self.trajectory_pub.topic_name}' has {sub_count} subscriber(s)")
-            except Exception as e:
-                self.get_logger().warning(f"Failed to count subscribers: {e}")
-
-        self.create_timer(5.0, check_subscribers)  # Check every 5 seconds
 
     def _on_j1_state(self, msg: Float32) -> None:
         """Callback when robot publishes joint state."""
