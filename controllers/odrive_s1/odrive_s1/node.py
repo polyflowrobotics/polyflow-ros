@@ -368,8 +368,11 @@ class ODriveS1Controller(Node):
         # Create a timer to periodically check for publishers
         def check_publishers():
             for sub in self._trajectory_subscriptions:
-                pub_count = sub.get_publisher_count()
-                self.get_logger().info(f"Topic '{sub.topic_name}' has {pub_count} publisher(s)")
+                try:
+                    pub_count = self.count_publishers(sub.topic_name)
+                    self.get_logger().info(f"Topic '{sub.topic_name}' has {pub_count} publisher(s)")
+                except Exception as e:
+                    self.get_logger().warning(f"Failed to count publishers for {sub.topic_name}: {e}")
 
         self.create_timer(5.0, check_publishers)  # Check every 5 seconds
         self.joint_state_pub = self.create_publisher(JointState, "joint/state", 10)
