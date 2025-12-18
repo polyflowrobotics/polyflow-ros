@@ -23,6 +23,8 @@ from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from rclpy.logging import LoggingSeverity
 from std_msgs.msg import Float32
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from builtin_interfaces.msg import Duration
 
 
 # ============================================================================
@@ -681,6 +683,8 @@ class WebRTCBridge(Node):
     def _setup_ros_interface(self) -> None:
         """Setup ROS publishers and subscribers."""
         self.j1_cmd_pub = self.create_publisher(Float32, "/arm/j1/cmd/position", 10)
+        # Publishes incoming WebRTC JointTrajectory commands to downstream controllers (e.g., ODrive)
+        self.trajectory_pub = self.create_publisher(JointTrajectory, "webrtc", 10)
         self.j1_state_sub = self.create_subscription(
             Float32, "/arm/j1/state/position", self._on_j1_state, 10
         )
@@ -715,8 +719,60 @@ class WebRTCBridge(Node):
             msg.data = pos
             self.j1_cmd_pub.publish(msg)
             self.get_logger().info(f"Received control: j1 position={pos}")
+        elif topic == "robot/joint/trajectory":
+            self._handle_joint_trajectory(envelope.get("payload", {}))
         elif topic == "system/nixos/rebuild":
             threading.Thread(target=self.trigger_nixos_rebuild, daemon=True).start()
+
+    def _handle_joint_trajectory(self, payload: dict) -> None:
+        """Convert an inbound payload into a JointTrajectory and publish to ROS."""
+        if not isinstance(payload, dict):
+            self.get_logger().warn("JointTrajectory payload must be an object")
+            return
+
+        joint_id = payload.get("jointId") or payload.get("joint_id")
+        if not joint_id:
+            self.get_logger().warn("JointTrajectory payload missing 'jointId'")
+            return
+
+        point_data = payload.get("point") or payload.get("points") or {}
+        # Allow list form; take the last/only point
+        if isinstance(point_data, list):
+            if not point_data:
+                self.get_logger().warn("JointTrajectory payload has empty points")
+                return
+            point_data = point_data[-1] or {}
+        if not isinstance(point_data, dict):
+            self.get_logger().warn("JointTrajectory point must be an object")
+            return
+
+        jt_point = JointTrajectoryPoint()
+        if "positions" in point_data:
+            jt_point.positions = [float(v) for v in point_data.get("positions", [])]
+        if "velocities" in point_data:
+            jt_point.velocities = [float(v) for v in point_data.get("velocities", [])]
+        if "accelerations" in point_data:
+            jt_point.accelerations = [float(v) for v in point_data.get("accelerations", [])]
+        if "effort" in point_data or "efforts" in point_data:
+            jt_point.effort = [float(v) for v in point_data.get("effort") or point_data.get("efforts") or []]
+
+        tfs = (
+            point_data.get("timeFromStart")
+            or point_data.get("time_from_start")
+            or point_data.get("timeFromStartSec")
+        )
+        if tfs is not None:
+            try:
+                secs = float(tfs)
+                jt_point.time_from_start = Duration(sec=int(secs), nanosec=int((secs - int(secs)) * 1e9))
+            except Exception:
+                self.get_logger().warn("Invalid time_from_start in JointTrajectory payload")
+
+        msg = JointTrajectory()
+        msg.joint_names = [str(joint_id)]
+        msg.points.append(jt_point)
+        self.trajectory_pub.publish(msg)
+        self.get_logger().info(f"Published JointTrajectory for joint_id={joint_id}")
 
     def trigger_nixos_rebuild(self) -> None:
         """Trigger NixOS rebuild via systemd service and monitor completion."""
