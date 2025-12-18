@@ -185,12 +185,18 @@ class CANSimpleAxis:
         try:
             import can  # type: ignore
         except ImportError:
+            self._log_warn("python-can not available, cannot send CAN message")
             return
 
         arb_id = _odrive_cansimple_arbitration_id(self.node_id, command_id)
         msg = can.Message(arbitration_id=arb_id, data=data, is_extended_id=False)
+        self._log_debug(f"Sending CAN: node_id={self.node_id}, cmd_id=0x{command_id:02x}, arb_id=0x{arb_id:03x}, data={data.hex()}")
         with self._lock:
-            self._bus.send(msg)
+            try:
+                self._bus.send(msg)
+                self._log_debug(f"CAN message sent successfully")
+            except Exception as exc:
+                self._log_warn(f"Failed to send CAN message: {exc}")
 
     def _rx_loop(self) -> None:
         while not self._stop_event.is_set():
@@ -222,6 +228,7 @@ class CANSimpleAxis:
                     self._last_heartbeat_error = int(error)
                     self._last_heartbeat_state = int(state)
                     self._last_heartbeat_time_s = now_s
+                self._log_debug(f"Heartbeat: error=0x{error:08x}, state={state}")
             return
 
         if command_id == self.CMD_GET_ENCODER_ESTIMATES and len(data) >= 8:
@@ -589,7 +596,9 @@ async def run_odrive(node: ODriveS1Controller):
             await asyncio.sleep(0.1)
 
         if node.can_enable_closed_loop_on_start:
+            node.get_logger().info(f"Enabling closed-loop control on ODrive (node_id={node.can_node_id})")
             axis.set_axis_state(axis.AXIS_STATE_CLOSED_LOOP_CONTROL)
+            node.get_logger().info("Closed-loop control command sent")
 
         poll_period = 1.0 / float(node.can_poll_hz) if node.can_poll_hz else 0.02
         try:
