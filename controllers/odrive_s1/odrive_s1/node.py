@@ -228,7 +228,6 @@ class CANSimpleAxis:
                     self._last_heartbeat_error = int(error)
                     self._last_heartbeat_state = int(state)
                     self._last_heartbeat_time_s = now_s
-                self._log_debug(f"Heartbeat: error=0x{error:08x}, state={state}")
             return
 
         if command_id == self.CMD_GET_ENCODER_ESTIMATES and len(data) >= 8:
@@ -311,17 +310,20 @@ class ODriveS1Controller(Node):
         self.control_mode = parameters.get("control_mode", "position")
         self.transport = parameters.get("transport", "usb")
 
+        # Gear ratio: motor_turns = output_turns * gear_ratio
+        gear_ratio = float(parameters.get("gear_ratio", 1.0))
+
         units = str(parameters.get("units", "radians")).lower().strip()
         if units in ("turn", "turns"):
-            default_cmd_pos_scale = 1.0
-            default_cmd_vel_scale = 1.0
-            default_state_pos_scale = 1.0
-            default_state_vel_scale = 1.0
+            default_cmd_pos_scale = 1.0 * gear_ratio
+            default_cmd_vel_scale = 1.0 * gear_ratio
+            default_state_pos_scale = 1.0 / gear_ratio
+            default_state_vel_scale = 1.0 / gear_ratio
         else:
-            default_cmd_pos_scale = 1.0 / float(math.tau)
-            default_cmd_vel_scale = 1.0 / float(math.tau)
-            default_state_pos_scale = float(math.tau)
-            default_state_vel_scale = float(math.tau)
+            default_cmd_pos_scale = (1.0 / float(math.tau)) * gear_ratio
+            default_cmd_vel_scale = (1.0 / float(math.tau)) * gear_ratio
+            default_state_pos_scale = float(math.tau) / gear_ratio
+            default_state_vel_scale = float(math.tau) / gear_ratio
 
         self.cmd_position_scale = float(parameters.get("cmd_position_scale", default_cmd_pos_scale))
         self.cmd_velocity_scale = float(parameters.get("cmd_velocity_scale", default_cmd_vel_scale))
@@ -369,16 +371,6 @@ class ODriveS1Controller(Node):
         for i, (topic, sub) in enumerate(zip(topics, self._trajectory_subscriptions)):
             self.get_logger().info(f"  Subscription {i}: topic='{topic}', resolved='{sub.topic_name}', valid={sub is not None}")
 
-        # Create a timer to periodically check for publishers
-        def check_publishers():
-            for sub in self._trajectory_subscriptions:
-                try:
-                    pub_count = self.count_publishers(sub.topic_name)
-                    self.get_logger().info(f"Topic '{sub.topic_name}' has {pub_count} publisher(s)")
-                except Exception as e:
-                    self.get_logger().warning(f"Failed to count publishers for {sub.topic_name}: {e}")
-
-        self.create_timer(5.0, check_publishers)  # Check every 5 seconds
         self.joint_state_pub = self.create_publisher(JointState, "joint/state", 10)
 
         rate_hz = configuration.get("rate_hz", 50)

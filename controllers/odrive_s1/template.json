@@ -71,6 +71,14 @@
       "ui": { "group": "Control", "order": 4 }
     },
 
+    "gear_ratio": {
+      "label": "Gear Ratio",
+      "type": "number",
+      "default": 1.0,
+      "description": "Gear ratio between motor and output (motor_turns = output_turns * gear_ratio). For example, 5.0 means the motor turns 5 times for each output turn.",
+      "ui": { "group": "Control", "order": 5 }
+    },
+
     "can.node_id": {
       "label": "CAN Node ID",
       "type": "number",
