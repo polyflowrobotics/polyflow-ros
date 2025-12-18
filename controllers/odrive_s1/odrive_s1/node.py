@@ -349,10 +349,14 @@ class ODriveS1Controller(Node):
 
         qos_depth = 10
         topics = self._inbound_topics()
+        self.get_logger().info(f"Creating subscriptions for topics: {topics}")
         self._trajectory_subscriptions = [
             self.create_subscription(JointTrajectory, topic, self._trajectory_callback, qos_depth) for topic in topics
         ]
-        self.get_logger().info(f"Subscribing to inbound topics: {topics}")
+        self.get_logger().info(f"Successfully subscribed to {len(self._trajectory_subscriptions)} topics: {topics}")
+        self.get_logger().info(f"Node namespace: '{self.get_namespace()}'")
+        for i, (topic, sub) in enumerate(zip(topics, self._trajectory_subscriptions)):
+            self.get_logger().info(f"  Subscription {i}: topic='{topic}', resolved='{sub.topic_name}', valid={sub is not None}")
         self.joint_state_pub = self.create_publisher(JointState, "joint/state", qos_depth)
 
         rate_hz = configuration.get("rate_hz", 50)
@@ -416,6 +420,11 @@ class ODriveS1Controller(Node):
                 self.get_logger().warning(f"Failed to set velocity limit on {joint_id}: {exc}")
 
     def _trajectory_callback(self, msg: JointTrajectory) -> None:
+        self.get_logger().info(
+            f"_trajectory_callback invoked! joint_names={msg.joint_names}, "
+            f"num_points={len(msg.points)}, configured_joint_id={self.joint_id}"
+        )
+
         if not msg.joint_names or not msg.points or not self.joint_id:
             self.get_logger().debug("Received empty JointTrajectory")
             return

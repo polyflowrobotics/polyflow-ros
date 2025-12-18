@@ -685,6 +685,10 @@ class WebRTCBridge(Node):
         self.j1_cmd_pub = self.create_publisher(Float32, "/arm/j1/cmd/position", 10)
         # Publishes incoming WebRTC JointTrajectory commands to downstream controllers (e.g., ODrive)
         self.trajectory_pub = self.create_publisher(JointTrajectory, "/robot/joint/trajectory", 10)
+        self.get_logger().info(
+            f"Created JointTrajectory publisher - topic: '{self.trajectory_pub.topic_name}', "
+            f"namespace: '{self.get_namespace()}'"
+        )
         self.j1_state_sub = self.create_subscription(
             Float32, "/arm/j1/state/position", self._on_j1_state, 10
         )
@@ -772,7 +776,10 @@ class WebRTCBridge(Node):
         msg.joint_names = [str(joint_id)]
         msg.points.append(jt_point)
         self.trajectory_pub.publish(msg)
-        self.get_logger().info(f"Published JointTrajectory for joint_id={joint_id}")
+        self.get_logger().info(
+            f"Published JointTrajectory to '/robot/joint/trajectory' for joint_id={joint_id}, "
+            f"positions={jt_point.positions}, velocities={jt_point.velocities}, effort={jt_point.effort}"
+        )
 
     def trigger_nixos_rebuild(self) -> None:
         """Trigger NixOS rebuild via systemd service and monitor completion."""
