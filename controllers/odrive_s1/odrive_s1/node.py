@@ -401,8 +401,10 @@ class ODriveS1Controller(Node):
             if isinstance(conn, str):
                 topics.append(conn)
 
-        if "webrtc" not in topics:
-            topics.append("webrtc")
+        # Default to the WebRTC JointTrajectory bridge topic
+        for default_topic in ("robot/joint/trajectory", "webrtc"):
+            if default_topic not in topics:
+                topics.append(default_topic)
         return topics
 
     def register_axis(self, joint_id: str, axis: Any) -> None:
