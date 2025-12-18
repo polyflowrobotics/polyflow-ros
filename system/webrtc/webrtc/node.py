@@ -22,6 +22,7 @@ from aiortc.rtcdatachannel import RTCDataChannel
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from rclpy.logging import LoggingSeverity
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from std_msgs.msg import Float32
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from builtin_interfaces.msg import Duration
@@ -682,12 +683,19 @@ class WebRTCBridge(Node):
 
     def _setup_ros_interface(self) -> None:
         """Setup ROS publishers and subscribers."""
+        # Use explicit QoS profile for reliable communication
+        qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10
+        )
+
         self.j1_cmd_pub = self.create_publisher(Float32, "/arm/j1/cmd/position", 10)
         # Publishes incoming WebRTC JointTrajectory commands to downstream controllers (e.g., ODrive)
-        self.trajectory_pub = self.create_publisher(JointTrajectory, "/robot/joint/trajectory", 10)
+        self.trajectory_pub = self.create_publisher(JointTrajectory, "/robot/joint/trajectory", qos_profile)
         self.get_logger().info(
             f"Created JointTrajectory publisher - topic: '{self.trajectory_pub.topic_name}', "
-            f"namespace: '{self.get_namespace()}'"
+            f"namespace: '{self.get_namespace()}', QoS: RELIABLE/KEEP_LAST/depth=10"
         )
         self.j1_state_sub = self.create_subscription(
             Float32, "/arm/j1/state/position", self._on_j1_state, 10

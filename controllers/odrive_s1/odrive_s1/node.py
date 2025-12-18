@@ -13,6 +13,7 @@ from typing import Any, Dict, Optional
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory
 
@@ -347,17 +348,31 @@ class ODriveS1Controller(Node):
         self.velocity_step = self._first_param(["limit.velocity_step", "velocity_step"])
         self.axes: Dict[str, Any] = {}
 
-        qos_depth = 10
+        # Use explicit QoS profile for reliable communication
+        qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10
+        )
+
         topics = self._inbound_topics()
         self.get_logger().info(f"Creating subscriptions for topics: {topics}")
         self._trajectory_subscriptions = [
-            self.create_subscription(JointTrajectory, topic, self._trajectory_callback, qos_depth) for topic in topics
+            self.create_subscription(JointTrajectory, topic, self._trajectory_callback, qos_profile) for topic in topics
         ]
         self.get_logger().info(f"Successfully subscribed to {len(self._trajectory_subscriptions)} topics: {topics}")
-        self.get_logger().info(f"Node namespace: '{self.get_namespace()}'")
+        self.get_logger().info(f"Node namespace: '{self.get_namespace()}', QoS: RELIABLE/KEEP_LAST/depth=10")
         for i, (topic, sub) in enumerate(zip(topics, self._trajectory_subscriptions)):
             self.get_logger().info(f"  Subscription {i}: topic='{topic}', resolved='{sub.topic_name}', valid={sub is not None}")
-        self.joint_state_pub = self.create_publisher(JointState, "joint/state", qos_depth)
+
+        # Create a timer to periodically check for publishers
+        def check_publishers():
+            for sub in self._trajectory_subscriptions:
+                pub_count = sub.get_publisher_count()
+                self.get_logger().info(f"Topic '{sub.topic_name}' has {pub_count} publisher(s)")
+
+        self.create_timer(5.0, check_publishers)  # Check every 5 seconds
+        self.joint_state_pub = self.create_publisher(JointState, "joint/state", 10)
 
         rate_hz = configuration.get("rate_hz", 50)
         period = 1.0 / rate_hz if rate_hz else 0.02
