@@ -402,7 +402,7 @@ class ODriveS1Controller(Node):
                 topics.append(conn)
 
         # Default to the WebRTC JointTrajectory bridge topic
-        for default_topic in ("robot/joint/trajectory", "webrtc"):
+        for default_topic in ("/robot/joint/trajectory", "webrtc"):
             if default_topic not in topics:
                 topics.append(default_topic)
         return topics

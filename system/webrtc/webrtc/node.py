@@ -684,7 +684,7 @@ class WebRTCBridge(Node):
         """Setup ROS publishers and subscribers."""
         self.j1_cmd_pub = self.create_publisher(Float32, "/arm/j1/cmd/position", 10)
         # Publishes incoming WebRTC JointTrajectory commands to downstream controllers (e.g., ODrive)
-        self.trajectory_pub = self.create_publisher(JointTrajectory, "robot/joint/trajectory", 10)
+        self.trajectory_pub = self.create_publisher(JointTrajectory, "/robot/joint/trajectory", 10)
         self.j1_state_sub = self.create_subscription(
             Float32, "/arm/j1/state/position", self._on_j1_state, 10
         )
