@@ -627,13 +627,20 @@ class WebRTCBridge(Node):
         self._declare_parameters()
         self._load_parameters()
 
-        # Get ROS domain ID
+        # Get ROS domain ID and network config
         import os
         domain_id = os.environ.get('ROS_DOMAIN_ID', 'default (0)')
+        ros_localhost_only = os.environ.get('ROS_LOCALHOST_ONLY', 'not set')
+        cyclone_uri = os.environ.get('CYCLONEDDS_URI', 'not set')
+        fastdds_profile = os.environ.get('FASTRTPS_DEFAULT_PROFILES_FILE', 'not set')
 
         self.get_logger().info(
             f"WebRTC client starting for robot_id={self.robot_id}, "
             f"signaling={self.signaling_url}, ROS_DOMAIN_ID={domain_id}"
+        )
+        self.get_logger().info(
+            f"DDS config - ROS_LOCALHOST_ONLY={ros_localhost_only}, "
+            f"CYCLONEDDS_URI={cyclone_uri}, FASTRTPS_DEFAULT_PROFILES_FILE={fastdds_profile}"
         )
 
         # Setup ROS publishers and subscribers
@@ -687,19 +694,16 @@ class WebRTCBridge(Node):
 
     def _setup_ros_interface(self) -> None:
         """Setup ROS publishers and subscribers."""
-        # Use explicit QoS profile for reliable communication
-        qos_profile = QoSProfile(
-            reliability=ReliabilityPolicy.RELIABLE,
-            history=HistoryPolicy.KEEP_LAST,
-            depth=10
-        )
+        # Use system default QoS for maximum compatibility
+        from rclpy.qos import qos_profile_system_default
+        qos_profile = qos_profile_system_default
 
         self.j1_cmd_pub = self.create_publisher(Float32, "/arm/j1/cmd/position", 10)
         # Publishes incoming WebRTC JointTrajectory commands to downstream controllers (e.g., ODrive)
         self.trajectory_pub = self.create_publisher(JointTrajectory, "/robot/joint/trajectory", qos_profile)
         self.get_logger().info(
             f"Created JointTrajectory publisher - topic: '{self.trajectory_pub.topic_name}', "
-            f"namespace: '{self.get_namespace()}', QoS: RELIABLE/KEEP_LAST/depth=10"
+            f"namespace: '{self.get_namespace()}', QoS: system_default"
         )
         self.j1_state_sub = self.create_subscription(
             Float32, "/arm/j1/state/position", self._on_j1_state, 10

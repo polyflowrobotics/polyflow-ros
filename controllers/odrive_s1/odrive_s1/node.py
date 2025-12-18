@@ -348,12 +348,9 @@ class ODriveS1Controller(Node):
         self.velocity_step = self._first_param(["limit.velocity_step", "velocity_step"])
         self.axes: Dict[str, Any] = {}
 
-        # Use explicit QoS profile for reliable communication
-        qos_profile = QoSProfile(
-            reliability=ReliabilityPolicy.RELIABLE,
-            history=HistoryPolicy.KEEP_LAST,
-            depth=10
-        )
+        # Use system default QoS for maximum compatibility
+        from rclpy.qos import qos_profile_system_default
+        qos_profile = qos_profile_system_default
 
         topics = self._inbound_topics()
         self.get_logger().info(f"Creating subscriptions for topics: {topics}")
@@ -361,7 +358,7 @@ class ODriveS1Controller(Node):
             self.create_subscription(JointTrajectory, topic, self._trajectory_callback, qos_profile) for topic in topics
         ]
         self.get_logger().info(f"Successfully subscribed to {len(self._trajectory_subscriptions)} topics: {topics}")
-        self.get_logger().info(f"Node namespace: '{self.get_namespace()}', QoS: RELIABLE/KEEP_LAST/depth=10")
+        self.get_logger().info(f"Node namespace: '{self.get_namespace()}', QoS: system_default")
         for i, (topic, sub) in enumerate(zip(topics, self._trajectory_subscriptions)):
             self.get_logger().info(f"  Subscription {i}: topic='{topic}', resolved='{sub.topic_name}', valid={sub is not None}")
 
@@ -381,12 +378,19 @@ class ODriveS1Controller(Node):
         period = 1.0 / rate_hz if rate_hz else 0.02
         self.joint_state_timer = self.create_timer(period, self._publish_joint_state)
 
-        # Get ROS domain ID
+        # Get ROS domain ID and network config
         domain_id = os.environ.get('ROS_DOMAIN_ID', 'default (0)')
+        ros_localhost_only = os.environ.get('ROS_LOCALHOST_ONLY', 'not set')
+        cyclone_uri = os.environ.get('CYCLONEDDS_URI', 'not set')
+        fastdds_profile = os.environ.get('FASTRTPS_DEFAULT_PROFILES_FILE', 'not set')
 
         self.get_logger().info(
             f"ODrive S1 node starting (id={self.node_id}) for joint={self.joint_id}, "
             f"mode={self.control_mode}, ROS_DOMAIN_ID={domain_id}"
+        )
+        self.get_logger().info(
+            f"DDS config - ROS_LOCALHOST_ONLY={ros_localhost_only}, "
+            f"CYCLONEDDS_URI={cyclone_uri}, FASTRTPS_DEFAULT_PROFILES_FILE={fastdds_profile}"
         )
 
     @staticmethod
