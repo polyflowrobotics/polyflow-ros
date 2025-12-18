@@ -426,6 +426,7 @@ class ODriveS1Controller(Node):
             self.get_logger().debug(f"Joint {self.joint_id} not present in trajectory command")
             return
 
+        self.get_logger().info(f"Received JointTrajectory for joint {self.joint_id}")
         point = msg.points[-1]
         position = None
         velocity = None
