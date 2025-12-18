@@ -381,8 +381,12 @@ class ODriveS1Controller(Node):
         period = 1.0 / rate_hz if rate_hz else 0.02
         self.joint_state_timer = self.create_timer(period, self._publish_joint_state)
 
+        # Get ROS domain ID
+        domain_id = os.environ.get('ROS_DOMAIN_ID', 'default (0)')
+
         self.get_logger().info(
-            f"ODrive S1 node starting (id={self.node_id}) for joint={self.joint_id}, mode={self.control_mode}"
+            f"ODrive S1 node starting (id={self.node_id}) for joint={self.joint_id}, "
+            f"mode={self.control_mode}, ROS_DOMAIN_ID={domain_id}"
         )
 
     @staticmethod

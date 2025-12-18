@@ -627,9 +627,13 @@ class WebRTCBridge(Node):
         self._declare_parameters()
         self._load_parameters()
 
+        # Get ROS domain ID
+        import os
+        domain_id = os.environ.get('ROS_DOMAIN_ID', 'default (0)')
+
         self.get_logger().info(
             f"WebRTC client starting for robot_id={self.robot_id}, "
-            f"signaling={self.signaling_url}"
+            f"signaling={self.signaling_url}, ROS_DOMAIN_ID={domain_id}"
         )
 
         # Setup ROS publishers and subscribers
@@ -701,6 +705,16 @@ class WebRTCBridge(Node):
             Float32, "/arm/j1/state/position", self._on_j1_state, 10
         )
         self.state_channel: Optional[RTCDataChannel] = None
+
+        # Create a timer to periodically check for subscribers
+        def check_subscribers():
+            try:
+                sub_count = self.count_subscribers(self.trajectory_pub.topic_name)
+                self.get_logger().info(f"Topic '{self.trajectory_pub.topic_name}' has {sub_count} subscriber(s)")
+            except Exception as e:
+                self.get_logger().warning(f"Failed to count subscribers: {e}")
+
+        self.create_timer(5.0, check_subscribers)  # Check every 5 seconds
 
     def _on_j1_state(self, msg: Float32) -> None:
         """Callback when robot publishes joint state."""
