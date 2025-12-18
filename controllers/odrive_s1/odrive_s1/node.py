@@ -190,11 +190,9 @@ class CANSimpleAxis:
 
         arb_id = _odrive_cansimple_arbitration_id(self.node_id, command_id)
         msg = can.Message(arbitration_id=arb_id, data=data, is_extended_id=False)
-        self._log_debug(f"Sending CAN: node_id={self.node_id}, cmd_id=0x{command_id:02x}, arb_id=0x{arb_id:03x}, data={data.hex()}")
         with self._lock:
             try:
                 self._bus.send(msg)
-                self._log_debug(f"CAN message sent successfully")
             except Exception as exc:
                 self._log_warn(f"Failed to send CAN message: {exc}")
 
